@@ -27,7 +27,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Password must contain at least one uppercase letter, one lowercase letter, and one number"
             )
-        
+              
         return password
     
 
