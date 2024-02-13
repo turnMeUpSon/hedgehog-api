@@ -27,7 +27,7 @@ def test_valid_custom_user_serializer():
 
 
 @pytest.mark.django_db
-def test_custom_user_serializer_password_validation():
+def test_custom_user_serializer_validate_password():
     # Password is not a least 8 characters long
     data_short_password = {
         'username': 'testuser',
@@ -75,3 +75,36 @@ def test_custom_user_serializer_password_validation():
         serializer_no_digit.is_valid(raise_exception=True)
     except ValidationError as e:
         assert 'Password must contain at least one uppercase letter, one lowercase letter, and one number' in str(e)
+
+
+@pytest.mark.django_db
+def test_unmathcing_passwords():
+    # Passwords don't match
+    invalid_data = {
+        'username': 'user1',
+        'password': 'TestPassword123',
+        'password2': 'MismatchedPassword'
+    }
+    serializer = CustomUserSerializer(data=invalid_data)
+    try:
+        serializer.is_valid(raise_exception=True)
+    except ValidationError as e:
+        assert 'The two passwords must match' in str(e)
+
+
+@pytest.mark.django_db
+def test_matching_passwords():
+    # Matching passwords
+    data = {
+        'username': 'testuser',
+        'password': 'TestPassword123',
+        'password2': 'TestPassword123'
+    }
+    serializer = CustomUserSerializer(data=data)
+    
+    # Check if the serializer is valid without raising any exceptions
+    assert serializer.is_valid()
+    
+    # Check if the validated data contains the passwords
+    assert serializer.validated_data['password'] == 'TestPassword123'
+    assert serializer.validated_data['password2'] == 'TestPassword123'
