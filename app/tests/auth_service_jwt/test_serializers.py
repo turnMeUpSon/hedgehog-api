@@ -1,7 +1,9 @@
 import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ValidationError
-from auth_service_jwt.serializers import CustomUserSerializer
+from auth_service_jwt.serializers import CustomUserSerializer, LoginSerializer
+from unittest.mock import patch
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 User = get_user_model()
@@ -108,3 +110,97 @@ def test_matching_passwords():
     # Check if the validated data contains the passwords
     assert serializer.validated_data['password'] == 'TestPassword123'
     assert serializer.validated_data['password2'] == 'TestPassword123'
+
+
+@pytest.mark.django_db
+def test_login_serializer():
+    user = User.objects.create_user(username='test_user', password='TestPassword123')
+    data = {
+        'username': 'test_user',
+        'password': 'TestPassword123'
+    }
+    serializer = LoginSerializer(data=data)
+    assert serializer.is_valid()
+
+    # Check if correct tokens are returned
+    tokens = serializer.get_tokens_for_user(user)
+    assert 'refresh' in tokens
+    assert 'access' in tokens
+
+
+@pytest.mark.django_db
+def test_login_serializer_authentication_success():
+    # Create a user
+    user = User.objects.create_user(username='test_user', password='test_password')
+
+    # Create serializer data
+    data = {
+        'username': user.username,
+        'password': user.password
+    }
+
+    with patch('auth_service_jwt.serializers.authenticate') as mock_authenticate:
+        # Set the return value of the mock authenticate method
+        mock_authenticate.return_value = user
+
+        # Initialize serializer with data
+        serializer = LoginSerializer(data=data)
+
+        # Validate serializer
+        assert serializer.is_valid()
+
+        # Check if correct tokens are returned
+        tokens = serializer.get_tokens_for_user(user)
+        assert 'refresh' in tokens
+        assert 'access' in tokens
+
+
+@pytest.mark.django_db
+def test_login_serializer_invalid_username():
+    # Create serializer data with invalid username
+    data = {
+        'username': 'non_existing_user',
+        'password': 'test_password'
+    }
+
+    # Initialize serializer with data
+    serializer = LoginSerializer(data=data)
+
+    # Validate serializer
+    assert not serializer.is_valid()
+    assert 'Invalid username or password.' in serializer.errors['non_field_errors']
+
+
+@pytest.mark.django_db
+def test_login_serializer_invalid_password():
+    # Create a user
+    user = User.objects.create_user(username='test_user', password='test_password')
+
+    # Create serializer data with invalid password
+    data = {
+        'username': user.username,
+        'password': 'wrong_password'
+    }
+
+    # Initialize serializer with data
+    serializer = LoginSerializer(data=data)
+
+    # Validate serializer
+    assert not serializer.is_valid()
+    assert 'Invalid username or password.' in serializer.errors['non_field_errors']
+
+
+@pytest.mark.django_db
+def test_login_serializer_missing_fields():
+    # Create serializer data with missing fields
+    data = {}
+
+    # Initialize serializer with data
+    serializer = LoginSerializer(data=data)
+
+    # Validate serializer
+    assert not serializer.is_valid()
+    
+    # Check for missing 'username' and 'password' errors
+    assert 'username' in serializer.errors
+    assert 'password' in serializer.errors

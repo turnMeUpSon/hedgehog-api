@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  3linch-api:
+  hedgehog-api:
     build: ./app
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
@@ -11,9 +11,9 @@ services:
     env_file:
       - ./.env.dev
     depends_on:
-      - 3linch-db
+      - hedgehog-db
   
-  3linch-db:
+  hedgehog-db:
     image: postgres:15
     volumes:
       - postgres_data:/var/lib/postgresql/data/
