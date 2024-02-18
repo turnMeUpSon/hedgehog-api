@@ -13,6 +13,13 @@ services:
     depends_on:
       - hedgehog-db
   
+  hedgehog-client:
+    build: ./client
+    ports:
+      - 3000:3000
+    volumes:
+      - ./client/:/usr/src/client/
+    
   hedgehog-db:
     image: postgres:15
     volumes:
