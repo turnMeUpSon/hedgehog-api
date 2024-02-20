@@ -8,7 +8,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/turnMeUpSon/hedgehog">
-    <img src="https://github.com/turnMeUpSon/hedgehog-docs/blob/main/Hedgehog-architecture.png" alt="Logo" width="80" height="80">
+    <img src="https://github.com/turnMeUpSon/hedgehog-docs/blob/main/Hedgehog-architecture.png">
   </a>
 </div>
 
